@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "./password";
@@ -9,8 +10,13 @@ import { hashPassword } from "./password";
  * as long as the exported function signatures stay the same.
  */
 
+// On Vercel the project folder is read-only, so use the writable temp folder there.
+// Data in /tmp is per-instance and resets on cold starts: fine for a demo, not for production.
 const DATA_FILE =
-  process.env.DATA_FILE ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "db.json");
+  process.env.DATA_FILE ??
+  (process.env.VERCEL
+    ? path.join(os.tmpdir(), "taskhive-db.json")
+    : path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "db.json"));
 
 export type User = {
   id: string;
