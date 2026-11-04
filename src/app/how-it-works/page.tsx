@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HowItWorksDiagrams } from "@/components/HowItWorksDiagrams";
 import { BTN, CARD, Container, PageTitle } from "@/components/ui";
 import { SERVICE_FEE } from "@/lib/format";
 
@@ -41,6 +42,8 @@ export default function HowItWorksPage() {
           This is a demo project, so no real money moves. Payments are simulated.
         </p>
       </section>
+
+      <HowItWorksDiagrams />
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/tasks/new" className={BTN}>Post a task</Link>
