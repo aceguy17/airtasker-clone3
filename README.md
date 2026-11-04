@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TaskHive: Airtasker-style marketplace (Phase 1 MVP)
 
-## Getting Started
+A working Next.js demo of a two-sided task marketplace. Posters post tasks, Taskers make offers, hire, chat, get paid through escrow and leave reviews.
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+# or for production
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Demo accounts (password `password123`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Email | Role |
+|---|---|
+| alex@example.com | Poster |
+| sam@example.com | Tasker (Assembly, Cleaning) |
+| priya@example.com | Tasker (Gardening, Pet Care) |
+| tom@example.com | Tasker (Painting, Handyman) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sign up with any new email to try the full flow yourself.
 
-## Learn More
+## What works
 
-To learn more about Next.js, take a look at the following resources:
+- Sign up, log in, log out (salted scrypt password hashing, HTTP-only session cookie)
+- Post a task: category, in-person or remote, fixed/hourly/open budget, optional date
+- Browse tasks: keyword (all words must match), category, location type, price range, sort
+- Make an offer (price, availability, message). Phone numbers and emails in messages are masked.
+- Poster reviews offers privately and hires one. Other offers are declined automatically.
+- Escrow flow: fund (demo), Tasker marks done, Poster confirms and releases payment
+- Chat between the Poster and the hired Tasker
+- Two-way reviews; Tasker profiles show average rating and completed jobs
+- Find Taskers directory, dashboard with earnings after a 10% fee, messages inbox, profile settings
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## What is mocked (Phase 1)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Payments:** no real money moves. "Fund" and "release" only change task state. Swap in Stripe Connect (test mode) for Phase 2.
+- **Phone verification:** a demo button, no SMS is sent.
+- **Storage:** a JSON file at `data/db.json` (created on first run, git-ignored). Replace `src/lib/db.ts` with Postgres/Prisma for Phase 2. The pages call only the exported functions in that file.
+- **Email notifications, ID verification, disputes, admin panel, maps:** planned for later phases (see the project plan).
 
-## Deploy on Vercel
+## Project layout
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/app/            pages and routes (App Router)
+src/app/actions.ts  all server actions (writes): auth, tasks, offers, escrow, chat, reviews
+src/lib/db.ts       storage layer (JSON file for now)
+src/lib/auth.ts     sessions and current-user helpers
+src/lib/format.ts   money, dates, fee logic, contact masking
+src/components/     shared UI and task card
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- Branding is a placeholder ("TaskHive"). Airtasker is a real trademark, so keep the clone's name and visuals distinct if it is ever published.
+- The app is rendered per request (`force-dynamic`) because the data file changes at runtime.
