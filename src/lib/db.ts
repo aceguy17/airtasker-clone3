@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "./password";
+import { SAMPLE_TASKS } from "./sample-tasks";
 
 /**
  * Phase 1 storage: a JSON file on disk.
@@ -226,7 +227,68 @@ function seed(): Data {
     },
   ];
 
+  // Sample tasks from sample-tasks.ts, spread across posters and statuses.
+  const posters = ["u_alex", "u_priya", "u_tom", "u_sam"];
+  const taskers = ["u_sam", "u_priya", "u_tom"];
+  const sampleOffers: Offer[] = [];
+  SAMPLE_TASKS.forEach((s, i) => {
+    const id = `t_s${String(i + 1).padStart(2, "0")}`;
+    const posterId = posters[i % posters.length];
+    const candidates = taskers.filter((t) => t !== posterId);
+    const cycle = i % 10;
+    const status: TaskStatus =
+      cycle === 7 ? "in_progress" : cycle === 9 ? "completed" : i % 17 === 3 ? "cancelled" : "open";
+    const price = s.budget ?? 90 + (i % 6) * 10;
+    const hiredTaskerId = status === "in_progress" || status === "completed" ? candidates[i % candidates.length] : null;
+    const createdAt = iso(-(i % 28) - 0.2);
+
+    tasks.push({
+      id,
+      posterId,
+      title: s.title,
+      description: s.description,
+      categoryId: s.categoryId,
+      mode: s.mode,
+      suburb: s.mode === "remote" ? "Remote" : s.suburb,
+      budgetType: s.budgetType,
+      budget: s.budget,
+      dueDate: i % 4 === 0 ? iso(3 + (i % 20)).slice(0, 10) : null,
+      status,
+      hiredTaskerId,
+      agreedPrice: hiredTaskerId ? price : null,
+      escrow: status === "completed" ? "released" : status === "in_progress" ? "funded" : "none",
+      workDoneAt: status === "completed" ? createdAt : null,
+      completedAt: status === "completed" ? iso(-1) : null,
+      createdAt,
+    });
+
+    if (hiredTaskerId) {
+      sampleOffers.push({
+        id: `o_s${i + 1}`,
+        taskId: id,
+        taskerId: hiredTaskerId,
+        price,
+        message: "Hi, I can take this on. I have done similar jobs and can start on the date you need.",
+        availability: "Flexible",
+        status: "accepted",
+        createdAt: iso(-(i % 28) - 0.5),
+      });
+    } else if (status === "open" && i % 3 === 0) {
+      sampleOffers.push({
+        id: `o_s${i + 1}`,
+        taskId: id,
+        taskerId: candidates[(i + 1) % candidates.length],
+        price,
+        message: "Hello, I am available and happy to quote. I have experience with this kind of job.",
+        availability: "This week",
+        status: "pending",
+        createdAt: iso(-(i % 28) - 0.3),
+      });
+    }
+  });
+
   const offers: Offer[] = [
+    ...sampleOffers,
     {
       id: "o_seed1",
       taskId: "t_wardrobe",
